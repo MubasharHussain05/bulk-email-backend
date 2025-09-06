@@ -17,6 +17,11 @@ router.get('/public', async (req, res) => {
   }
 });
 
+// Test endpoint without auth
+router.get('/test', async (req, res) => {
+  res.json({ message: 'Templates endpoint working', timestamp: new Date().toISOString() });
+});
+
 router.get('/', authenticateToken, templateController.getAllTemplates);
 router.get('/:id', authenticateToken, templateController.getTemplate);
 router.post('/', authenticateToken, templateController.createTemplate);

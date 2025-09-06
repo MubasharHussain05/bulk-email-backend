@@ -18,6 +18,11 @@ router.get('/public', async (req, res) => {
   }
 });
 
+// Test endpoint without auth
+router.get('/test', async (req, res) => {
+  res.json({ message: 'Campaigns endpoint working', timestamp: new Date().toISOString() });
+});
+
 router.get('/', authenticateToken, campaignController.getAllCampaigns);
 router.get('/:id', authenticateToken, campaignController.getCampaign);
 router.post('/', authenticateToken, campaignController.createCampaign);

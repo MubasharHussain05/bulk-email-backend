@@ -20,6 +20,11 @@ router.get('/public', async (req, res) => {
   }
 });
 
+// Test endpoint without auth
+router.get('/test', async (req, res) => {
+  res.json({ message: 'Contacts endpoint working', timestamp: new Date().toISOString() });
+});
+
 router.get('/', authenticateToken, contactController.getAllContacts);
 router.get('/:id', authenticateToken, contactController.getContact);
 router.post('/', authenticateToken, contactController.createContact);
