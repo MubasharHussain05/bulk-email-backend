@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const authenticateToken = (req, res, next) => {
   // Development bypass - remove this in production
-  if (process.env.NODE_ENV === 'development' || !process.env.JWT_SECRET || process.env.JWT_SECRET === 'your_jwt_secret_key') {
+  if (process.env.NODE_ENV === 'development') {
     req.user = { userId: new mongoose.Types.ObjectId('507f1f77bcf86cd799439011') };
     return next();
   }

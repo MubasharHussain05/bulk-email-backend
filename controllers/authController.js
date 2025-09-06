@@ -6,10 +6,6 @@ exports.register = async (req, res) => {
   try {
     const { username, password, email } = req.body;
     
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
-    }
-    
     // Check if user already exists
     const existingUser = await User.findOne({ 
       $or: [{ username }, { email }] 
@@ -34,23 +30,13 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed', details: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
-    }
-    
-    if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET not configured');
-      return res.status(500).json({ error: 'Server configuration error' });
-    }
-    
     const user = await User.findOne({ username });
     
     if (!user || !await bcrypt.compare(password, user.password)) {
@@ -74,7 +60,7 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed', details: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 

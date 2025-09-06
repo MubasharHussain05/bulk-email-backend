@@ -1,38 +1,19 @@
 const mongoose = require('mongoose');
 
-let isConnected = false;
-
 const connectDB = async () => {
-  if (isConnected && mongoose.connection.readyState === 1) {
-    return mongoose.connection;
-  }
-  
   try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI not set');
-    }
-    
-    // Close existing connection if any
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
-    
-    const connection = await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      connectTimeoutMS: 10000,
       serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      bufferCommands: false,
-      maxPoolSize: 1,
+      bufferCommands: true,
     });
-    
-    isConnected = true;
-    console.log('MongoDB Connected successfully');
-    return connection;
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error('MongoDB connection error:', error.message);
-    isConnected = false;
-    throw error;
+    console.error('Database connection error:', error.message);
+    console.log('Server will continue without database connection');
+    // Don't retry automatically to avoid infinite loops
   }
 };
 
