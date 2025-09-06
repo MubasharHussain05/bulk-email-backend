@@ -16,6 +16,7 @@ try {
   app.use('/api/campaigns', ensureDBConnection, require('./routes/campaigns'));
   app.use('/api/email', ensureDBConnection, require('./routes/email'));
   app.use('/api/templates', ensureDBConnection, require('./routes/templates'));
+  app.use('/api/stats', ensureDBConnection, require('./routes/stats'));
   app.use('/', require('./routes/unsubscribe'));
 } catch (error) {
   console.error('Route loading error:', error.message);
