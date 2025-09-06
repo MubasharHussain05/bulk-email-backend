@@ -6,13 +6,27 @@ const connectDB = require('./config/database');
 
 const app = express();
 
-// Connect to MongoDB (non-blocking)
-connectDB().catch(err => {
-  console.error('Failed to connect to MongoDB:', err);
-});
+// Connect to MongoDB (non-blocking for serverless)
+if (process.env.MONGODB_URI) {
+  connectDB().catch(err => {
+    console.error('MongoDB connection failed:', err.message);
+  });
+} else {
+  console.warn('MONGODB_URI not found, running without database');
+}
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:8080', 
+    'https://bulk-email-sender-mu.vercel.app',
+    'https://*.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -37,6 +51,14 @@ app.get('/api/health', (req, res) => {
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ message: 'Bulk Email Service API', status: 'running' });
+});
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.sendStatus(200);
 });
 
 // Error handling middleware

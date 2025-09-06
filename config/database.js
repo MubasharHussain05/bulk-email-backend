@@ -1,25 +1,28 @@
 const mongoose = require('mongoose');
 
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected) return;
+  
   try {
     if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI environment variable is not set');
+      console.warn('MONGODB_URI not set');
+      return;
     }
     
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      connectTimeoutMS: 10000,
       serverSelectionTimeoutMS: 5000,
       bufferCommands: false,
-      maxPoolSize: 10,
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    return conn;
+    
+    isConnected = true;
+    console.log('MongoDB Connected');
   } catch (error) {
-    console.error('Database connection error:', error.message);
-    // In serverless, we can continue without DB for some endpoints
-    throw error;
+    console.error('DB Error:', error.message);
+    isConnected = false;
   }
 };
 
