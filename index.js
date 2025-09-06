@@ -15,7 +15,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:8080', 
     'https://bulk-email-sender-mu.vercel.app',
-    'https://*.vercel.app'
+    'https://bulk-email-backend-mu.vercel.app',
+    /\.vercel\.app$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -49,9 +50,21 @@ app.get('/', (req, res) => {
 
 // Handle preflight requests
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'https://bulk-email-sender-mu.vercel.app',
+    'https://bulk-email-backend-mu.vercel.app'
+  ];
+  
+  if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.sendStatus(200);
 });
 
