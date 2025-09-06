@@ -6,8 +6,10 @@ const connectDB = require('./config/database');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB (non-blocking)
+connectDB().catch(err => {
+  console.error('Failed to connect to MongoDB:', err);
+});
 
 // Middleware
 app.use(cors());
@@ -24,7 +26,17 @@ app.use('/', require('./routes/unsubscribe')); // Unsubscribe route (no /api pre
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Bulk Email Service API is running' });
+  res.json({ 
+    status: 'OK', 
+    message: 'Bulk Email Service API is running',
+    env: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ message: 'Bulk Email Service API', status: 'running' });
 });
 
 // Error handling middleware
