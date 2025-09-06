@@ -1,37 +1,25 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const connectDB = require('./config/database');
-
 const app = express();
 
-// Database connection will be handled in serverless function
-// No blocking connection here for serverless compatibility
+// Basic middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Middleware
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:8080', 
-    'https://bulk-email-sender-mu.vercel.app',
-    'https://bulk-email-backend-mu.vercel.app',
-    /\.vercel\.app$/
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Database middleware
+const { ensureDBConnection } = require('./middleware/database');
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/contacts', require('./routes/contacts'));
-app.use('/api/campaigns', require('./routes/campaigns'));
-app.use('/api/email', require('./routes/email'));
-app.use('/api/templates', require('./routes/templates'));
-app.use('/', require('./routes/unsubscribe')); // Unsubscribe route (no /api prefix for email clients)
+// Routes with error handling
+try {
+  app.use('/api/auth', ensureDBConnection, require('./routes/auth'));
+  app.use('/api/contacts', ensureDBConnection, require('./routes/contacts'));
+  app.use('/api/campaigns', ensureDBConnection, require('./routes/campaigns'));
+  app.use('/api/email', ensureDBConnection, require('./routes/email'));
+  app.use('/api/templates', ensureDBConnection, require('./routes/templates'));
+  app.use('/', require('./routes/unsubscribe'));
+} catch (error) {
+  console.error('Route loading error:', error.message);
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -48,25 +36,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Bulk Email Service API', status: 'running' });
 });
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'https://bulk-email-sender-mu.vercel.app',
-    'https://bulk-email-backend-mu.vercel.app'
-  ];
-  
-  if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
-});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
