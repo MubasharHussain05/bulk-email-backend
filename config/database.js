@@ -3,26 +3,36 @@ const mongoose = require('mongoose');
 let isConnected = false;
 
 const connectDB = async () => {
-  if (isConnected) return;
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
   
   try {
     if (!process.env.MONGODB_URI) {
-      console.warn('MONGODB_URI not set');
-      return;
+      throw new Error('MONGODB_URI not set');
     }
     
-    await mongoose.connect(process.env.MONGODB_URI, {
+    // Close existing connection if any
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+    
+    const connection = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
       bufferCommands: false,
+      maxPoolSize: 1,
     });
     
     isConnected = true;
-    console.log('MongoDB Connected');
+    console.log('MongoDB Connected successfully');
+    return connection;
   } catch (error) {
-    console.error('DB Error:', error.message);
+    console.error('MongoDB connection error:', error.message);
     isConnected = false;
+    throw error;
   }
 };
 

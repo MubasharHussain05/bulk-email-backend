@@ -6,14 +6,8 @@ const connectDB = require('./config/database');
 
 const app = express();
 
-// Connect to MongoDB (non-blocking for serverless)
-if (process.env.MONGODB_URI) {
-  connectDB().catch(err => {
-    console.error('MongoDB connection failed:', err.message);
-  });
-} else {
-  console.warn('MONGODB_URI not found, running without database');
-}
+// Database connection will be handled in serverless function
+// No blocking connection here for serverless compatibility
 
 // Middleware
 app.use(cors({
